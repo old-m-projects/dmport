@@ -114,8 +114,6 @@ if(program.export){
 									var jspr = new RegExp(jsonifiedStorePath+'(\\\\+)?', 'g');
 
 									data = data.replace(jspr, '__MACHINE_STORE_PATH__');
-									
-									console.log(data);
 								}
 
 								config["machines"][program.export][filename] = new Buffer(data).toString('base64');
@@ -125,7 +123,7 @@ if(program.export){
 					})).then(function(){
 
 						//once we are done just console log the config.
-						//console.log(JSON.stringify(config));
+						console.log(JSON.stringify(config));
 					}).catch(function (err) {
 						console.error(err)
 					});
