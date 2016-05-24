@@ -1,0 +1,28 @@
+{
+  "name": "dmport",
+  "version": "0.0.1",
+  "description": "docker-machine Import/Export Utility",
+  "main": "index.js",
+  "scripts": {
+    "test": "mocha test --no-colors"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/gregkeys/dmport.git"
+  },
+  "keywords": [
+    "docker",
+    "machine",
+    "import",
+    "export"
+  ],
+  "author": "Greg Keys",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/gregkeys/dmport/issues"
+  },
+  "homepage": "https://github.com/gregkeys/dmport#readme",
+  "devDependencies": {
+    "mocha": "^2.5.1"
+  }
+}
