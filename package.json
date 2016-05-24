@@ -4,7 +4,8 @@
   "description": "docker-machine Import/Export Utility",
   "main": "index.js",
   "scripts": {
-    "test": "mocha test --no-colors"
+    "test": "mocha test --no-colors",
+    "patch": "npm version patch && npm publish && git push --follow-tags"
   },
   "repository": {
     "type": "git",
