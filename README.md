@@ -26,3 +26,6 @@
  ***caution*** This will overwrite your ca certs when importing make sure you have proper back ups
  
  From your friends @ [mumba.cloud](http://mumba.cloud)
+ 
+### Acknowledgements
+The idea for exporting as a JSON string came from [docker-machine-export](https://github.com/blackbeardapp/docker-machine-export)
