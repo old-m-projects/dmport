@@ -42,6 +42,10 @@ function getPaths(vars){
 			fs.mkdirSync(certpath);
 		}
 
+		if (!fs.existsSync(path.join(storepath, 'machines'))){
+			fs.mkdirSync(path.join(storepath, 'machines'));
+		}
+
 		if (!fs.existsSync(machinepath)){
 			fs.mkdirSync(machinepath);
 		}
