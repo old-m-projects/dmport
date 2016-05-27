@@ -164,6 +164,14 @@ if(program.import){
 				//we do the machine first so we can get the paths setup for certs but also change paths in the future if we have multiple machines.
 				paths = getPaths(machinename);
 
+				if (!fs.existsSync(paths.store)){
+					fs.mkdirSync(paths.store);
+				}
+				
+				if (!fs.existsSync(paths.machine)){
+					fs.mkdirSync(paths.machine);
+				}
+				
 				Promise.all(Object.keys(input[v][machinename]).map(function(filename){
 				return new Promise(function (resolve, reject) {
 					var cleartext = new Buffer(input[v][machinename][filename], 'base64');
@@ -188,7 +196,7 @@ if(program.import){
 						cleartext = cleartext.replace(/__MACHINE_STORE_PATH__/g,JSON.stringify(paths.store).replace(/['"]+/g, ''));
 					}
 
-					fs.writeFile(path.join(paths.machine, 'test', filename), cleartext, 'utf8', function (err) {
+					fs.writeFile(path.join(paths.machine, filename), cleartext, 'utf8', function (err) {
 						if (err) {
 							reject(err);
 						}
@@ -217,9 +225,13 @@ if(program.import){
 		}
 
 		if(v.indexOf('certs')!==-1){
+			if (!fs.existsSync(paths.cert)){
+				fs.mkdirSync(paths.cert);
+			}
+			
 			Promise.all(Object.keys(input[v]).map(function(filename){
 				return new Promise(function (resolve, reject) {
-					fs.writeFile(path.join(paths.cert, 'test', filename), new Buffer(input[v][filename], 'base64'), 'utf8', function (err) {
+					fs.writeFile(path.join(paths.cert, filename), new Buffer(input[v][filename], 'base64'), 'utf8', function (err) {
 						if (err) {
 							reject(err);
 						}
