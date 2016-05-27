@@ -16,6 +16,7 @@
 ### NOTES! 
 
 - Currently only handles importing / exporting of 1 machine at a time
+- Currently requires docker-machine to be available in the path
 - use the following to set env vars for machine, certificates will also be written to file
 
  ```
