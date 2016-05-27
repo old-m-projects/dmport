@@ -13,7 +13,7 @@ program
 	.usage('[options]')
 	.description('Import/Export docker-machines')
 	.option('-x, --export [value]', 'export docker machine')
-	.option('-i, --import [value]', 'import json encoded output from dmport export')
+	.option('-i, --import [value]', 'import json encoded output from dmport export. NOTE! use eval $(dmport -i $ENVVAR_W_EXPORT_JSON) to set env vars for machine, certificates will also be written to file')
 	.parse(process.argv);
 
 //we require options so lets error out if we dont get them.
@@ -22,6 +22,25 @@ if(!program.export && !program.import){
 	process.exit(9);
 }
 
+function getPaths(vars){
+	var machinepath, certPathArray, storepath, certpath;
+
+	if(vars.indexOf('DOCKER_')===-1){
+			machinepath = path.join(process.env.HOME, '.docker', 'machine', 'machines', vars, path.sep);
+			certpath = path.join(process.env.HOME, '.docker', 'machine', 'certs', path.sep);
+			storepath = path.join(process.env.HOME, '.docker', 'machine', path.sep);
+	}else{
+		//this regex digs the path out of the environment variables
+		machinepath = /DOCKER_CERT_PATH=(.*)/g.exec(vars)[1].replace(/['"]+/g, '');
+		certPathArray = machinepath.split(path.sep);
+		certPathArray.splice(-2, 2);
+		storepath = certPathArray.join(path.sep);
+		certPathArray.push("certs");
+		certpath = certPathArray.join(path.sep);
+	}
+
+	return {"machine": machinepath, "cert": certpath, "store": storepath};
+}
 
 //start the export method
 if(program.export){
@@ -33,15 +52,7 @@ if(program.export){
 			return;
 		}
 		var config = {};
-		//this regex digs the path out of the environment variables
-		var machinepath = /DOCKER_CERT_PATH=(.*)/g.exec(stdout)[1].replace(/['"]+/g, '');
-		var certPathArray = machinepath.split(path.sep);
-		var certpath = '';
-		certPathArray.splice(-2, 2);
-		var storepath = certPathArray.join(path.sep);
-		
-		certPathArray.push("certs");
-		certpath = certPathArray.join(path.sep);
+		var paths = getPaths(stdout);
 
 		//this regex look for all the environment variables with docker in the name, we also grab the value to place into our output config
 		var r =  /(DOCKER_[A-Z]\w+)=(.*)/g;
@@ -49,16 +60,20 @@ if(program.export){
 
 		//loop through the values of the regex to build our config
 		while (m = r.exec(stdout)) {
-			config[m[1]] = m[2].replace(/['"]+/g, '');
+			if(m[1] === 'DOCKER_CERT_PATH'){
+				config[m[1]] = '__MACHINE_PATH__';
+			}else{
+				config[m[1]] = m[2].replace(/['"]+/g, '');
+			}
 		}
 		config["machines"] = {};
 		config["certs"] = {};
 
 		//next we grab the files in the cert path, not sure if these are needed but I suspect they are
-		fs.readdir(certpath, function(err, files){
+		fs.readdir(paths.cert, function(err, files){
 			Promise.all(files.map(function(filename){
 				return new Promise(function (resolve, reject) {
-					fs.readFile(path.join(certpath, filename), 'utf8', function (err, data) {
+					fs.readFile(path.join(paths.cert, filename), 'utf8', function (err, data) {
 						if (err) {
 							reject(err);
 						}
@@ -71,10 +86,10 @@ if(program.export){
 
 				//next we grab the files in the machine export path, I added this into a machine key so we can later add exporting of multiple wihtout breaking anyting
 				config["machines"][program.export] = {};
-				fs.readdir(machinepath, function(err, files){
+				fs.readdir(paths.machine, function(err, files){
 					Promise.all(files.map(function(filename){
 						return new Promise(function (resolve, reject) {
-							fs.readFile(path.join(machinepath, filename), 'utf8', function (err, data) {
+							fs.readFile(path.join(paths.machine, filename), 'utf8', function (err, data) {
 								if (err) {
 									reject(err);
 								}
@@ -84,7 +99,7 @@ if(program.export){
 									//this just preps the paths for use as regex, Im sure there is a better way to do this.
 									//@todo test replace(/[\/]+/g, '\\/')
 									//sanitize our machines path
-									var jsonifiedMachinePath = JSON.stringify(machinepath)
+									var jsonifiedMachinePath = JSON.stringify(paths.machine)
 										.replace(/['"]+/g, '')//remove quotes
 										.replace(/[\\\\]+/g, '\\\\\\\\')//add escaping slashes for windows paths
 										.replace(/[\/]+/g, '\\/');//add escaping slashes for linux paths
@@ -96,7 +111,7 @@ if(program.export){
 									data = data.replace(jmpr, '__MACHINE_PATH__');
 									
 									//sanitize our certificate path
-									var jsonifiedCertPath = JSON.stringify(certpath)
+									var jsonifiedCertPath = JSON.stringify(paths.cert)
 										.replace(/['"]+/g, '')
 										.replace(/[\\\\]+/g, '\\\\\\\\')
 										.replace(/[\/]+/g, '\\/');
@@ -106,7 +121,7 @@ if(program.export){
 									data = data.replace(jcpr, '__MACHINE_CERT_PATH__');
 									
 									//santize our storepath
-									var jsonifiedStorePath = JSON.stringify(storepath)
+									var jsonifiedStorePath = JSON.stringify(paths.store)
 										.replace(/['"]+/g, '')
 										.replace(/[\\\\]+/g, '\\\\\\\\')
 										.replace(/[\/]+/g, '\\/');
@@ -137,5 +152,87 @@ if(program.export){
 }
 
 if(program.import){
+	var input = JSON.parse(program.import);
+	var keys = Object.keys(input);
+	var env='';
+	var paths;
+
+	//then we loop through again to write our files.
+	keys.forEach(function(v){
+		if(v.indexOf('machines')!==-1){
+			Object.keys(input[v]).map(function(machinename){
+				//we do the machine first so we can get the paths setup for certs but also change paths in the future if we have multiple machines.
+				paths = getPaths(machinename);
+
+				Promise.all(Object.keys(input[v][machinename]).map(function(filename){
+				return new Promise(function (resolve, reject) {
+					var cleartext = new Buffer(input[v][machinename][filename], 'base64');
+
+					if(filename === 'config.json'){
+						/*cleartext = cleartext.toString();
+						 var cpy, rplc, m, parts, r =  /(__MACHINE_PATH__([^"]*))/g;
+						 cpy = cleartext;
+						 //loop through the values of the regex to build our config
+						 while (m = r.exec(cleartext)) {
+						 parts = m[0].split('__MACHINE_PATH__');
+						 rplc = new RegExp(m[0], 'g');
+						 console.log(rplc)
+						 cpy = cpy.replace(rplc, path.join(paths.machine, m[1]));
+						 //config[m[1]] = m[2].replace(/['"]+/g, '');
+						 }
+						 cleartext = cpy;*/
+						//console.log(cleartext.toString())
+						cleartext = cleartext.toString();
+						cleartext = cleartext.replace(/__MACHINE_PATH__/g, JSON.stringify(paths.machine).replace(/['"]+/g, ''));
+						cleartext = cleartext.replace(/__MACHINE_CERT_PATH__/g,JSON.stringify(paths.cert).replace(/['"]+/g, ''));
+						cleartext = cleartext.replace(/__MACHINE_STORE_PATH__/g,JSON.stringify(paths.store).replace(/['"]+/g, ''));
+					}
+
+					fs.writeFile(path.join(paths.machine, 'test', filename), cleartext, 'utf8', function (err) {
+						if (err) {
+							reject(err);
+						}
+						resolve();
+					});
+				});
+				})).then(function(){
+					//we loop through once to get our paths && exports
+					keys.forEach(function(v){
+						if(v.indexOf('DOCKER')!==-1){
+							if(v === 'DOCKER_CERT_PATH'){
+								env += 'export ' + v + '="' + paths.machine + '"\n';
+							}else{
+								env += 'export ' + v + '="' + input[v] + '"\n';
+							}
+
+						}
+					});
+
+					//output our environment vars
+					console.log(env);
+				}).catch(function (err) {
+					console.error(err)
+				});
+			})
+		}
+
+		if(v.indexOf('certs')!==-1){
+			Promise.all(Object.keys(input[v]).map(function(filename){
+				return new Promise(function (resolve, reject) {
+					fs.writeFile(path.join(paths.cert, 'test', filename), new Buffer(input[v][filename], 'base64'), 'utf8', function (err) {
+						if (err) {
+							reject(err);
+						}
+						resolve();
+					});
+				});
+			})).then(function(){
+
+			}).catch(function (err) {
+				console.error(err)
+			});
+		}
+	});
+
 
 }
