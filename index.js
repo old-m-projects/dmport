@@ -29,6 +29,22 @@ function getPaths(vars){
 			machinepath = path.join(process.env.HOME, '.docker', 'machine', 'machines', vars, path.sep);
 			certpath = path.join(process.env.HOME, '.docker', 'machine', 'certs', path.sep);
 			storepath = path.join(process.env.HOME, '.docker', 'machine', path.sep);
+
+		if (!fs.existsSync(path.join(process.env.HOME, '.docker'))){
+			fs.mkdirSync(path.join(process.env.HOME, '.docker'));
+		}
+
+		if (!fs.existsSync(storepath)){
+			fs.mkdirSync(storepath);
+		}
+
+		if (!fs.existsSync(certpath)){
+			fs.mkdirSync(certpath);
+		}
+
+		if (!fs.existsSync(machinepath)){
+			fs.mkdirSync(machinepath);
+		}
 	}else{
 		//this regex digs the path out of the environment variables
 		machinepath = /DOCKER_CERT_PATH=(.*)/g.exec(vars)[1].replace(/['"]+/g, '');
@@ -157,20 +173,14 @@ if(program.import){
 	var env='';
 	var paths;
 
+	///root/.docker/machine/
+
 	//then we loop through again to write our files.
 	keys.forEach(function(v){
 		if(v.indexOf('machines')!==-1){
 			Object.keys(input[v]).map(function(machinename){
 				//we do the machine first so we can get the paths setup for certs but also change paths in the future if we have multiple machines.
 				paths = getPaths(machinename);
-
-				if (!fs.existsSync(paths.store)){
-					fs.mkdirSync(paths.store);
-				}
-				
-				if (!fs.existsSync(paths.machine)){
-					fs.mkdirSync(paths.machine);
-				}
 				
 				Promise.all(Object.keys(input[v][machinename]).map(function(filename){
 				return new Promise(function (resolve, reject) {
@@ -225,10 +235,6 @@ if(program.import){
 		}
 
 		if(v.indexOf('certs')!==-1){
-			if (!fs.existsSync(paths.cert)){
-				fs.mkdirSync(paths.cert);
-			}
-			
 			Promise.all(Object.keys(input[v]).map(function(filename){
 				return new Promise(function (resolve, reject) {
 					fs.writeFile(path.join(paths.cert, filename), new Buffer(input[v][filename], 'base64'), { 'encoding':'utf8', 'mode':'600' }, function (err) {
