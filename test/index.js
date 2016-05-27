@@ -40,6 +40,9 @@ describe('dmport import', function(){
 	it('should parse the env vars and export them to the shell');
 	it('should parse the import value and write the values to the proper files');
 	it('should add the correct paths to the config.json');
+	it('should check if certs exists and prompt to overwrite');
+	it('should check if machine exists and prompt to overwrite');
+	it('should create new machine if it does not exist');
 });
 
 
