@@ -6,6 +6,12 @@ var exec = require('child_process').exec;
 var fs = require('fs');
 var path = require('path');
 
+/**
+ * Docker Machine Import / Export
+ *
+ * @copyright 2016 Mumba Pty Ltd. All rights reserved.
+ * @license   Apache-2.0
+ */
 
 //Setup our command line interactions
 program
@@ -62,7 +68,7 @@ function getPaths(vars){
 	return {"machine": machinepath, "cert": certpath, "store": storepath};
 }
 
-//start the export method
+//start of the export method
 if(program.export){
 
 	//since this is specific to docker-machine we are assuming its installed for exporting.
@@ -171,13 +177,12 @@ if(program.export){
 	});
 }
 
+//start of the import method
 if(program.import){
 	var input = JSON.parse(program.import);
 	var keys = Object.keys(input);
 	var env='';
 	var paths;
-
-	///root/.docker/machine/
 
 	//then we loop through again to write our files.
 	keys.forEach(function(v){
@@ -190,20 +195,8 @@ if(program.import){
 				return new Promise(function (resolve, reject) {
 					var cleartext = new Buffer(input[v][machinename][filename], 'base64');
 
+					//for the config.json we want to add the paths appropriate for the computer we are importing to
 					if(filename === 'config.json'){
-						/*cleartext = cleartext.toString();
-						 var cpy, rplc, m, parts, r =  /(__MACHINE_PATH__([^"]*))/g;
-						 cpy = cleartext;
-						 //loop through the values of the regex to build our config
-						 while (m = r.exec(cleartext)) {
-						 parts = m[0].split('__MACHINE_PATH__');
-						 rplc = new RegExp(m[0], 'g');
-						 console.log(rplc)
-						 cpy = cpy.replace(rplc, path.join(paths.machine, m[1]));
-						 //config[m[1]] = m[2].replace(/['"]+/g, '');
-						 }
-						 cleartext = cpy;*/
-						//console.log(cleartext.toString())
 						cleartext = cleartext.toString();
 						cleartext = cleartext.replace(/__MACHINE_PATH__/g, JSON.stringify(paths.machine).replace(/['"]+/g, ''));
 						cleartext = cleartext.replace(/__MACHINE_CERT_PATH__/g,JSON.stringify(paths.cert).replace(/['"]+/g, ''));
