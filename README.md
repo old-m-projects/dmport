@@ -15,8 +15,8 @@
  
 ### NOTES! 
 
-Currently only handles importing / exporting of 1 machine at a time
-use the following to set env vars for machine, certificates will also be written to file
+- Currently only handles importing / exporting of 1 machine at a time
+- use the following to set env vars for machine, certificates will also be written to file
 
  ```
  eval $(dmport -i $ENVVAR_W_EXPORT_JSON) 
