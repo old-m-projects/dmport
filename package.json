@@ -3,6 +3,7 @@
   "version": "0.0.1",
   "description": "docker-machine Import/Export Utility",
   "main": "index.js",
+  "bin": "./index.js",
   "scripts": {
     "test": "mocha test --no-colors",
     "patch": "npm version patch && npm publish && git push --follow-tags"
