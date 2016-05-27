@@ -196,7 +196,7 @@ if(program.import){
 						cleartext = cleartext.replace(/__MACHINE_STORE_PATH__/g,JSON.stringify(paths.store).replace(/['"]+/g, ''));
 					}
 
-					fs.writeFile(path.join(paths.machine, filename), cleartext, 'utf8', function (err) {
+					fs.writeFile(path.join(paths.machine, filename), cleartext, { 'encoding':'utf8', 'mode':'600' }, function (err) {
 						if (err) {
 							reject(err);
 						}
@@ -231,7 +231,7 @@ if(program.import){
 			
 			Promise.all(Object.keys(input[v]).map(function(filename){
 				return new Promise(function (resolve, reject) {
-					fs.writeFile(path.join(paths.cert, filename), new Buffer(input[v][filename], 'base64'), 'utf8', function (err) {
+					fs.writeFile(path.join(paths.cert, filename), new Buffer(input[v][filename], 'base64'), { 'encoding':'utf8', 'mode':'600' }, function (err) {
 						if (err) {
 							reject(err);
 						}
