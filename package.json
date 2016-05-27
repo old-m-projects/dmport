@@ -26,5 +26,8 @@
   "homepage": "https://gitlab.com/Mumba-Utility/dmport#readme",
   "devDependencies": {
     "mocha": "^2.5.1"
+  },
+  "dependencies": {
+    "commander": "^2.9.0"
   }
 }
