@@ -1,5 +1,5 @@
 {
-  "name": "dmport",
+  "name": "@mumbacloud/dmport",
   "version": "0.0.1",
   "description": "docker-machine Import/Export Utility",
   "main": "index.js",
@@ -9,7 +9,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/gregkeys/dmport.git"
+    "url": "git@gitlab.com:Mumba-Utility/dmport.git"
   },
   "keywords": [
     "docker",
@@ -20,9 +20,9 @@
   "author": "Greg Keys",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/gregkeys/dmport/issues"
+    "url": "https://gitlab.com/Mumba-Utility/dmport/issues"
   },
-  "homepage": "https://github.com/gregkeys/dmport#readme",
+  "homepage": "https://gitlab.com/Mumba-Utility/dmport#readme",
   "devDependencies": {
     "mocha": "^2.5.1"
   }
