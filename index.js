@@ -1,5 +1,4 @@
 #! /usr/local/bin/node
-
 var program = require('commander');
 var pack = require('./package.json');
 var exec = require('child_process').exec;
