@@ -1,6 +1,6 @@
 {
   "name": "@mumbacloud/dmport",
-  "version": "0.0.13",
+  "version": "0.0.14",
   "description": "docker-machine Import/Export Utility",
   "main": "index.js",
   "bin": "./index.js",
