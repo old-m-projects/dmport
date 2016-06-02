@@ -1,4 +1,4 @@
-#! /usr/bin/env node
+#! /usr/local/bin/node
 
 var program = require('commander');
 var pack = require('./package.json');
