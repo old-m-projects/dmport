@@ -5,6 +5,7 @@ var pack = require('./package.json');
 var exec = require('child_process').exec;
 var fs = require('fs');
 var path = require('path');
+var exportCommand = "";
 
 /**
  * Docker Machine Import / Export
@@ -20,6 +21,7 @@ program
 	.description('Import/Export docker-machines')
 	.option('-x, --export [value]', 'export docker machine')
 	.option('-i, --import [value]', 'import json encoded output from dmport export. NOTE! use eval $(dmport -i $ENVVAR_W_EXPORT_JSON) to set env vars for machine, certificates will also be written to file')
+	.option('-s, --shell [value]', 'sets the shell for docker-machine to use')
 	.parse(process.argv);
 
 //we require options so lets error out if we dont get them.
@@ -71,8 +73,14 @@ function getPaths(vars) {
 //start of the export method
 if (program.export) {
 
+	exportCommand = 'docker-machine env ' + program.export;
+
+	if(program.shell){
+		exportCommand = exportCommand + ' --shell ' + program.shell;
+	}
+
 	//since this is specific to docker-machine we are assuming its installed for exporting.
-	exec('docker-machine env ' + program.export, function (error, stdout, stderr) {
+	exec(exportCommand, function (error, stdout, stderr) {
 		if (error) {
 			console.error('exec error', error);
 			return;
